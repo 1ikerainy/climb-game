@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import playerImgSrc from "./assets/images/player-def.png";
 import playerJumpImgSrc from "./assets/images/player-jump.png";
+import bg0 from "./assets/images/bg-image0.jpg";
 import bg1 from "./assets/images/bg-image1.jpeg";
 import bg2 from "./assets/images/bg-image2.jpeg";
 import bg3 from "./assets/images/bg-image3.jpeg";
@@ -129,6 +130,7 @@ export default function ClimbGame() {
   // 새로운 useEffect: 배경 이미지 로드
   useEffect(() => {
     const imageSources = {
+      "지표면": bg0,
       "대류권": bg1,
       "성층권": bg2,
       "중간권": bg3,
@@ -255,8 +257,21 @@ export default function ClimbGame() {
 
       // 그리기
       ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+      // --- [추가] 지표면(빌딩숲) 배경 그리기 ---
+      const cityImg = bgImages.current["지표면"];
+      if (cityImg) {
+        // 이미지 비율에 맞춘 렌더링 높이 계산
+        const cityRenderHeight = cityImg.height * (GAME_WIDTH / cityImg.width);
+        // 캐릭터가 서 있는 바닥(state.startY) 위치에 이미지를 배치
+        // + 40은 바닥 플랫폼의 높이를 고려한 보정값입니다.
+        const cityCanvasY = state.startY - cityRenderHeight + state.cameraY + 80;
+
+        if (cityCanvasY < GAME_HEIGHT && cityCanvasY + cityRenderHeight > 0) {
+          ctx.drawImage(cityImg, 0, cityCanvasY, GAME_WIDTH, cityRenderHeight);
+        }
+      }
       const bgList = [  // 배경 이미지 배열 준비 (높이 순서대로)
-        { img: bgImages.current["대류권"], start: 0, end: 10 },
+        { img: bgImages.current["대류권"], start: 1.3, end: 10 },
         { img: bgImages.current["성층권"], start: 10, end: 50 },
         { img: bgImages.current["중간권"], start: 50, end: 80 },
         { img: bgImages.current["열권"], start: 80, end: 500 },
