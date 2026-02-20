@@ -2,15 +2,9 @@
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
   background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
 a {
@@ -24,10 +18,19 @@ a:hover {
 
 body {
   margin: 0;
+  /* 아래 4줄이 화면 정중앙 배치의 핵심입니다 */
   display: flex;
-  place-items: center;
+  justify-content: center; /* 가로 중앙 */
+  align-items: center;     /* 세로 중앙 */
+  min-height: 100vh;      /* 화면 높이 전체 사용 */
+  
   min-width: 320px;
-  min-height: 100vh;
+}
+
+#root {
+  width: 100%;
+  text-align: center;
+  /* 부모인 body가 flex이므로 내부 요소도 중앙에 오게 됩니다 */
 }
 
 h1 {

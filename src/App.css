@@ -1,7 +1,16 @@
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+  /* 화면 전체를 기준으로 설정 */
+  width: 100%;
+  min-height: 100vh; 
+  
+  /* Flexbox로 자식 요소(게임 화면)를 정중앙에 배치 */
+  display: flex;
+  flex-direction: column; /* 내용물이 여러 개일 경우 세로로 쌓음 */
+  justify-content: center; /* 가로 중앙 */
+  align-items: center;     /* 세로 중앙 */
+  
+  margin: 0;
+  padding: 0; /* 패딩 때문에 밀릴 수 있으니 0으로 조절 */
   text-align: center;
 }
 
