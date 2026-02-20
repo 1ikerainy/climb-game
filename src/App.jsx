@@ -33,11 +33,26 @@ export default function ClimbGame() {
   const animationRef = useRef(null);
   const playerImg = useRef(new Image());
   const playerJumpImg = useRef(new Image());
-  const bgImages = useRef(new Image());
+  const bgImages = useRef({});
   const [imagesLoaded, setImagesLoaded] = useState(false);
 
   const [running, setRunning] = useState(true);
   const [score, setScore] = useState(0);
+
+  const heightNum = parseFloat(score);
+  let atmosphereName = "";
+
+  if (heightNum < 10) {
+    atmosphereName = "대류권";
+  } else if (heightNum < 50) {
+    atmosphereName = "성층권";
+  } else if (heightNum < 80) {
+    atmosphereName = "중간권";
+  } else if (heightNum < 500) {
+    atmosphereName = "열권";
+  } else {
+    atmosphereName = "외기권 (우주)";
+  }
 
   const gameState = useRef(null);
 
@@ -240,14 +255,36 @@ export default function ClimbGame() {
 
       // 그리기
       ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-      // 현재 대기권에 맞는 배경 이미지를 그립니다.
-      const currentBgImage = bgImages.current[atmosphereName];
-      if (currentBgImage) { // 이미지를 캔버스에 꽉 채워 그립니다.
-        ctx.drawImage(currentBgImage, 0, 0, GAME_WIDTH, GAME_HEIGHT);
-      } else {  // 이미지가 없으면 기본 배경색으로 대체 (혹시 모를 오류 방지)
-        ctx.fillStyle = "#0f172a";
-        ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-      }
+      const bgList = [  // 배경 이미지 배열 준비 (높이 순서대로)
+        { img: bgImages.current["대류권"], start: 0, end: 10 },
+        { img: bgImages.current["성층권"], start: 10, end: 50 },
+        { img: bgImages.current["중간권"], start: 50, end: 80 },
+        { img: bgImages.current["열권"], start: 80, end: 500 },
+        { img: bgImages.current["외기권 (우주)"], start: 500, end: 1000 },
+      ];
+
+      bgList.forEach((layer) => {
+        if (!layer.img) return;
+
+        // 1km를 100px로 계산 (현재 점수 체계 기준)
+        const startY = state.startY - (layer.start * 100) + state.cameraY;
+        const endY = state.startY - (layer.end * 100) + state.cameraY;
+        
+        // 이미지 한 장의 높이 (캔버스 너비에 맞췄을 때의 비율 유지)
+        // 보통 세로형 이미지이므로 GAME_WIDTH에 맞춘 비율로 계산하거나 
+        // 고정 높이(예: GAME_HEIGHT)를 설정합니다.
+        const imgRenderHeight = layer.img.height * (GAME_WIDTH / layer.img.width);
+
+        // 이 구간 안에서 이미지를 반복해서 그림
+        // 현재 구간의 끝(위쪽)부터 시작(아래쪽)까지 쌓아 올림
+        for (let currentY = startY - imgRenderHeight; currentY >= endY - imgRenderHeight; currentY -= imgRenderHeight) {
+          
+          // 최적화: 화면에 보이는 영역만 그리기
+          if (currentY < GAME_HEIGHT && currentY + imgRenderHeight > 0) {
+            ctx.drawImage(layer.img, 0, currentY, GAME_WIDTH, imgRenderHeight);
+          }
+        }
+      });
 
       // 플랫폼
       ctx.fillStyle = "#22c55e";
@@ -275,21 +312,6 @@ export default function ClimbGame() {
 
     return () => cancelAnimationFrame(animationRef.current);
   }, [running, imagesLoaded, atmosphereName]);
-
-  const heightNum = parseFloat(score);
-  let atmosphereName = "";
-
-  if (heightNum < 10) {
-    atmosphereName = "대류권";
-  } else if (heightNum < 50) {
-    atmosphereName = "성층권";
-  } else if (heightNum < 80) {
-    atmosphereName = "중간권";
-  } else if (heightNum < 500) {
-    atmosphereName = "열권";
-  } else {
-    atmosphereName = "외기권 (우주)";
-  }
 
   return (
     <div className="w-full min-h-screen flex flex-col items-center justify-center gap-4 p-4 bg-slate-900 text-white">
