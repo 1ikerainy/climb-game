@@ -20,11 +20,20 @@ const JUMP_POWER = -10;
 const MOVE_SPEED = 4;
 
 function randomPlatform(y) {
+  // 지표면(GAME_HEIGHT - 40)에서 현재 y가 얼마나 멀어졌는지 km로 환산
+  const distance = (GAME_HEIGHT - 40) - y;
+  const estimatedHeight = distance / 100; 
+  
+  // 80km(열권) 이상인지 체크
+  const isHardMode = estimatedHeight >= 80;
+
   return {
-    x: Math.random() * (GAME_WIDTH - 80),
-    y,
-    width: 80,
+    x: Math.random() * (GAME_WIDTH - (isHardMode ? 60 : 80)),
+    y: y,
+    width: isHardMode ? 60 : 80, // 60으로 줄어듦
     height: 10,
+    // 0.5 확률로 왼쪽(-2) 또는 오른쪽(2) 속도 부여
+    dx: isHardMode ? (Math.random() > 0.5 ? 2 : -2) : 0, 
   };
 }
 
@@ -39,6 +48,7 @@ export default function ClimbGame() {
 
   const [running, setRunning] = useState(true);
   const [score, setScore] = useState(0);
+  const [highScore, setHighScore] = useState(0);
 
   const heightNum = parseFloat(score);
   let atmosphereName = "";
@@ -63,7 +73,8 @@ export default function ClimbGame() {
       x:  0,
       y: GAME_HEIGHT - 40,
       width: GAME_WIDTH,
-      height: 10,
+      height: 12,
+      dx: 0,
     };
     platforms.push(startPlatform);
 
@@ -73,7 +84,7 @@ export default function ClimbGame() {
 
     gameState.current = {
       player: {
-        x: startPlatform.x + startPlatform.width / 2 - PLAYER_SIZE / 2,
+        x: GAME_WIDTH / 2 - 40,
         y: startPlatform.y - PLAYER_SIZE,
         vy: 0,
         prevY: startPlatform.y - PLAYER_SIZE,
@@ -83,8 +94,8 @@ export default function ClimbGame() {
       platforms,
       cameraY: 0,
       maxHeight: 0,
-      startY: startPlatform.y - PLAYER_SIZE,  //게임 시작 시점의 위치 저장
       totalHeight: 0,
+      startY: startPlatform.y - PLAYER_SIZE,  //게임 시작 시점의 위치 저장
     };
 
     setScore(0);
@@ -162,6 +173,19 @@ export default function ClimbGame() {
   }, [setImagesLoaded]);
 
   useEffect(() => {
+    const saved = localStorage.getItem("climbHighScore");
+    if (saved) setHighScore(parseFloat(saved));
+  }, []);
+
+  useEffect(() => {
+    const currentScoreNum = parseFloat(score);
+    if (currentScoreNum > highScore) {
+      setHighScore(currentScoreNum);
+      localStorage.setItem("climbHighScore", currentScoreNum.toString());
+    }
+  }, [score, highScore]); // 점수가 오를 때마다 최고 기록과 비교
+
+  useEffect(() => {
     const ctx = canvasRef.current.getContext("2d");
 
     const loop = () => {
@@ -179,6 +203,16 @@ export default function ClimbGame() {
       if (p.x > GAME_WIDTH - 55) {
         p.x = GAME_WIDTH - 55;
       }
+
+      state.platforms.forEach((plat) => {
+        if (plat.dx !== 0) {
+          plat.x += plat.dx;
+          // 화면 양끝 벽에 부딪히면 튕기기
+          if (plat.x <= 0 || plat.x + plat.width >= GAME_WIDTH) {
+            plat.dx *= -1;
+          }
+        }
+      });
 
       // 중력
       p.prevY = p.y;
@@ -202,6 +236,7 @@ export default function ClimbGame() {
           p.vy = 0;
           p.onGround = true;
           p.jumpCount = 0; // 착지하면 초기화
+          p.x += (plat.dx || 0);  //발판의 속도만큼 플레이어 x좌표도 이동시킴
         }
       });
 
@@ -236,14 +271,14 @@ export default function ClimbGame() {
 
       // 플랫폼 재생성
       state.platforms = state.platforms.filter(
-        (plat) => plat.y < GAME_HEIGHT + 1000
+        (plat) => plat.y < GAME_HEIGHT + 100
       );
 
-      while (state.platforms.length < 12) {
+      while (state.platforms.length < 15) {
         const highest = Math.min(
           ...state.platforms.map((p) => p.y)
         );
-        state.platforms.push(randomPlatform(highest - 60));
+        state.platforms.push(randomPlatform(highest - 100));
       }
 
       // 낙하하면 게임 오버
@@ -390,6 +425,10 @@ export default function ClimbGame() {
           <div style={{ fontSize: '1.2rem', marginBottom: '20px' }}>
             지표면에서 {score}km
           </div>
+          {/* 최고 고도 */}
+          <div style={{ fontSize: '0.9rem', color: '#94a3b8', marginBottom: '5px' }}>
+            최고 기록: {highScore} km
+          </div>
 
           {/* 대기권 설명 */}
           <div style={{ 
@@ -415,7 +454,7 @@ export default function ClimbGame() {
           <div style={{ marginBottom: '20px', textAlign: 'center' }}>
             {!running ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#f87171' }}>으악 떨어졌다ㅠㅠ</div>
+                <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#f87171' }}>흥 나락갔쥬?</div>
                 <button 
                   onClick={initGame}
                   style={{ 
