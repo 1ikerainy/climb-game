@@ -22,20 +22,33 @@ const GRAVITY = 0.6;
 const JUMP_POWER = -10;
 const MOVE_SPEED = 4;
 
-function randomPlatform(y) {
-  // 지표면(GAME_HEIGHT - 40)에서 현재 y가 얼마나 멀어졌는지 km로 환산
+function randomPlatform(y, prevX) {
   const distance = (GAME_HEIGHT - 40) - y;
   const estimatedHeight = distance / 100; 
-  
-  // 80km(열권) 이상인지 체크
   const isHardMode = estimatedHeight >= 80;
+  const platWidth = isHardMode ? 60 : 80;
+  const maxX = GAME_WIDTH - platWidth;
+
+  let newX;
+  
+  // 첫 발판이거나 prevX가 없으면 그냥 랜덤 생성
+  if (prevX === undefined) {
+    newX = Math.random() * maxX;
+  } else {
+    // 이전 발판과 최소 40 이상 차이나도록 좌표 뽑기
+    let attempts = 0;
+    do {
+      newX = Math.random() * maxX;
+      attempts++;
+    } while (Math.abs(newX - prevX) < 40 && attempts < 20); 
+    // attempts < 20은 무한루프 방지용 안전장치입니다.
+  }
 
   return {
-    x: Math.random() * (GAME_WIDTH - (isHardMode ? 60 : 80)),
+    x: newX,
     y: y,
-    width: isHardMode ? 60 : 80, // 60으로 줄어듦
+    width: platWidth,
     height: 10,
-    // 0.5 확률로 왼쪽(-2) 또는 오른쪽(2) 속도 부여
     dx: isHardMode ? (Math.random() > 0.5 ? 2 : -2) : 0, 
   };
 }
@@ -81,8 +94,15 @@ export default function ClimbGame() {
     };
     platforms.push(startPlatform);
 
+    let lastX = GAME_WIDTH / 2; // 처음 기준점은 화면 중앙
+
     for (let i = 1; i < 1000; i++) {
-      platforms.push(randomPlatform(GAME_HEIGHT - 40 - i * 100));
+      // 이전 발판의 위치(lastX)를 넘겨서 새 발판을 만듦
+      const newPlat = randomPlatform(GAME_HEIGHT - 40 - i * 100, lastX);
+      platforms.push(newPlat);
+      
+      // 방금 만든 발판의 위치를 다음 발판을 위해 저장
+      lastX = newPlat.x; 
     }
 
     gameState.current = {
@@ -278,10 +298,14 @@ export default function ClimbGame() {
       );
 
       while (state.platforms.length < 15) {
-        const highest = Math.min(
-          ...state.platforms.map((p) => p.y)
+        // 현재 존재하는 발판 중 가장 높은(y가 가장 작은) 발판을 찾음
+        const highestPlat = state.platforms.reduce((highest, plat) => 
+          plat.y < highest.y ? plat : highest
         );
-        state.platforms.push(randomPlatform(highest - 100));
+        
+        // 그 발판의 y좌표에서 100만큼 위로, 그리고 x좌표를 참고하여 새 발판 생성
+        const newPlat = randomPlatform(highestPlat.y - 100, highestPlat.x);
+        state.platforms.push(newPlat);
       }
 
       // 낙하하면 게임 오버
