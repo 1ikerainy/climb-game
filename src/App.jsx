@@ -3,9 +3,12 @@ import playerImgSrc from "./assets/images/player-def.png";
 import playerJumpImgSrc from "./assets/images/player-jump.png";
 import bg0 from "./assets/images/bg-image0.jpg";
 import bg1 from "./assets/images/bg-image1.jpeg";
-import bg2 from "./assets/images/bg-image2.jpeg";
-import bg3 from "./assets/images/bg-image3.jpeg";
-import bg4 from "./assets/images/bg-image4.jpeg";
+//import bg2 from "./assets/images/bg-image2.jpeg";
+import bg2 from "./assets/images/bg-image2-2.png";
+//import bg3 from "./assets/images/bg-image3.jpeg";
+import bg3 from "./assets/images/bg-image3-2.png";
+//import bg4 from "./assets/images/bg-image4.jpeg";
+import bg4 from "./assets/images/bg-image4-2.png";
 import bg5 from "./assets/images/bg-image5.jpeg";
 // 간단한 "인내의 숲" 스타일 위로 올라가는 플랫폼 게임
 // 방향키 좌우 이동 + 자동 점프
