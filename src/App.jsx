@@ -24,9 +24,21 @@ const GRAVITY = 0.6;
 const JUMP_POWER = -10;
 const MOVE_SPEED = 4;
 
+// 80km 이전: 100픽셀 = 1km
+// 80km 이후: 25픽셀 = 1km (4배 빠르게)
+function getKmFromPixels(pixels) {
+  if (pixels <= 8000) return pixels / 100;
+  return 80 + (pixels - 8000) / 25; 
+}
+
+function getPixelsFromKm(km) {
+  if (km <= 80) return km * 100;
+  return 8000 + (km - 80) * 25;
+}
+
 function randomPlatform(y, prevX) {
   const distance = (GAME_HEIGHT - 40) - y;
-  const estimatedHeight = distance / 100; 
+  const estimatedHeight = getKmFromPixels(distance);
   const isHardMode = estimatedHeight >= 80;
   const platWidth = isHardMode ? 60 : 80;
   const maxX = GAME_WIDTH - platWidth;
@@ -321,8 +333,9 @@ export default function ClimbGame() {
 
       //실시간 위치 기반 점수 계산
       const rawScore = state.totalHeight + (state.startY - p.y);
-      const formattedScore = (rawScore / 100).toFixed(2); //100으로 나누어 소수점 둘째 자리까지 문자열로 변환
-      setScore(rawScore > 0 ? formattedScore : "0.00"); //만약 0보다 작으면 "0.00"으로 고정
+      const actualKm = getKmFromPixels(rawScore); // 새 변환 함수 사용
+      const formattedScore = actualKm.toFixed(2);
+      setScore(rawScore > 0 ? formattedScore : "0.00");
 
       // 그리기
       ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
@@ -349,13 +362,13 @@ export default function ClimbGame() {
 
       bgList.forEach((layer) => {
         // 현재 구간의 Y좌표 (화면 기준)
-        const startY = state.startY - (layer.start * 100) + state.cameraY;
-        const endY = state.startY - (layer.end * 100) + state.cameraY;
+        const startY = state.startY - getPixelsFromKm(layer.start) + state.cameraY;
+        const endY = state.startY - getPixelsFromKm(layer.end) + state.cameraY;
         
         let tileStartY = startY; // 반복(타일) 이미지가 그려지기 시작할 기준점
 
         // 1. [구간 시작점] 화면 크기(GAME_HEIGHT)만큼 딱 한 번 시작 이미지 그리기
-        if (layer.startImg) {
+        if (layer.startImg && layer.startImg.complete) {
           // 이미지가 그려질 맨 위쪽 Y좌표 계산
           const startImgY = startY - GAME_HEIGHT; 
           
@@ -369,7 +382,7 @@ export default function ClimbGame() {
         }
 
         // 2. [나머지 구간] 기존 이미지를 반복(타일링)해서 그리기
-        if (layer.tileImg) {
+        if (layer.tileImg && layer.tileImg.complete) {
           const tileRenderHeight = layer.tileImg.height * (GAME_WIDTH / layer.tileImg.width);
 
           for (let currentY = tileStartY - tileRenderHeight; currentY >= endY - tileRenderHeight; currentY -= tileRenderHeight) {
