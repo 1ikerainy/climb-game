@@ -2,14 +2,15 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import playerImgSrc from "./assets/images/player-def.png";
 import playerJumpImgSrc from "./assets/images/player-jump.png";
 import bg0 from "./assets/images/bg-image0.jpg";
-import bg1 from "./assets/images/bg-image1.jpeg";
-//import bg2 from "./assets/images/bg-image2.jpeg";
-import bg2 from "./assets/images/bg-image2-2.png";
-//import bg3 from "./assets/images/bg-image3.jpeg";
-import bg3 from "./assets/images/bg-image3-2.png";
-//import bg4 from "./assets/images/bg-image4.jpeg";
-import bg4 from "./assets/images/bg-image4-2.png";
-import bg5 from "./assets/images/bg-image5.jpeg";
+import bg1Tile from "./assets/images/bg-image1.jpeg";
+import bg1Start from "./assets/images/bg-image1-2.png";
+import bg2Tile from "./assets/images/bg-image2.jpeg";
+import bg2Start from "./assets/images/bg-image2-2.png";
+import bg3Tile from "./assets/images/bg-image3.jpeg";
+import bg3Start from "./assets/images/bg-image3-2.png";
+import bg4Tile from "./assets/images/bg-image4.jpeg";
+import bg4Start from "./assets/images/bg-image4-2.png";
+import bg5Tile from "./assets/images/bg-image5.jpeg";
 // 간단한 "인내의 숲" 스타일 위로 올라가는 플랫폼 게임
 // 방향키 좌우 이동 + 자동 점프
 // 목표: 최대한 위로 올라가기
@@ -165,11 +166,15 @@ export default function ClimbGame() {
   useEffect(() => {
     const imageSources = {
       "지표면": bg0,
-      "대류권": bg1,
-      "성층권": bg2,
-      "중간권": bg3,
-      "열권": bg4,
-      "외기권 (우주)": bg5,
+      "대류권_시작": bg1Start,
+      "대류권_반복": bg1Tile,
+      "성층권_시작": bg2Start,
+      "성층권_반복": bg2Tile,
+      "중간권_시작": bg3Start,
+      "중간권_반복": bg3Tile,
+      "열권_시작": bg4Start,
+      "열권_반복": bg4Tile,
+      "외기권_반복": bg5Tile,
     };
 
     let loadedCount = 0;
@@ -333,33 +338,43 @@ export default function ClimbGame() {
           ctx.drawImage(cityImg, 0, cityCanvasY, GAME_WIDTH, cityRenderHeight);
         }
       }
-      const bgList = [  // 배경 이미지 배열 준비 (높이 순서대로)
-        { img: bgImages.current["대류권"], start: 1.3, end: 10 },
-        { img: bgImages.current["성층권"], start: 10, end: 50 },
-        { img: bgImages.current["중간권"], start: 50, end: 80 },
-        { img: bgImages.current["열권"], start: 80, end: 500 },
-        { img: bgImages.current["외기권 (우주)"], start: 500, end: 1000 },
+      const bgList = [  
+        { startImg: bgImages.current["대류권_시작"], tileImg: bgImages.current["대류권_반복"], start: 1.3, end: 10 },
+        { startImg: bgImages.current["성층권_시작"], tileImg: bgImages.current["성층권_반복"], start: 10, end: 50 },
+        { startImg: bgImages.current["중간권_시작"], tileImg: bgImages.current["중간권_반복"], start: 50, end: 80 },
+        { startImg: bgImages.current["열권_시작"], tileImg: bgImages.current["열권_반복"], start: 80, end: 500 },
+        { startImg: null, tileImg: bgImages.current["외기권_반복"], start: 500, end: 1000 },
       ];
 
       bgList.forEach((layer) => {
-        if (!layer.img) return;
-
-        // 1km를 100px로 계산 (현재 점수 체계 기준)
+        // 현재 구간의 Y좌표 (화면 기준)
         const startY = state.startY - (layer.start * 100) + state.cameraY;
         const endY = state.startY - (layer.end * 100) + state.cameraY;
         
-        // 이미지 한 장의 높이 (캔버스 너비에 맞췄을 때의 비율 유지)
-        // 보통 세로형 이미지이므로 GAME_WIDTH에 맞춘 비율로 계산하거나 
-        // 고정 높이(예: GAME_HEIGHT)를 설정합니다.
-        const imgRenderHeight = layer.img.height * (GAME_WIDTH / layer.img.width);
+        let tileStartY = startY; // 반복(타일) 이미지가 그려지기 시작할 기준점
 
-        // 이 구간 안에서 이미지를 반복해서 그림
-        // 현재 구간의 끝(위쪽)부터 시작(아래쪽)까지 쌓아 올림
-        for (let currentY = startY - imgRenderHeight; currentY >= endY - imgRenderHeight; currentY -= imgRenderHeight) {
+        // 1. [구간 시작점] 화면 크기(GAME_HEIGHT)만큼 딱 한 번 시작 이미지 그리기
+        if (layer.startImg) {
+          // 이미지가 그려질 맨 위쪽 Y좌표 계산
+          const startImgY = startY - GAME_HEIGHT; 
           
-          // 최적화: 화면에 보이는 영역만 그리기
-          if (currentY < GAME_HEIGHT && currentY + imgRenderHeight > 0) {
-            ctx.drawImage(layer.img, 0, currentY, GAME_WIDTH, imgRenderHeight);
+          // 화면에 보일 때만 렌더링 (최적화)
+          if (startImgY < GAME_HEIGHT && startImgY + GAME_HEIGHT > 0) {
+            ctx.drawImage(layer.startImg, 0, startImgY, GAME_WIDTH, GAME_HEIGHT);
+          }
+          
+          // 시작 이미지가 화면 높이만큼 차지했으므로, 반복 이미지는 그 위에서부터 시작
+          tileStartY = startY - GAME_HEIGHT; 
+        }
+
+        // 2. [나머지 구간] 기존 이미지를 반복(타일링)해서 그리기
+        if (layer.tileImg) {
+          const tileRenderHeight = layer.tileImg.height * (GAME_WIDTH / layer.tileImg.width);
+
+          for (let currentY = tileStartY - tileRenderHeight; currentY >= endY - tileRenderHeight; currentY -= tileRenderHeight) {
+            if (currentY < GAME_HEIGHT && currentY + tileRenderHeight > 0) {
+              ctx.drawImage(layer.tileImg, 0, currentY, GAME_WIDTH, tileRenderHeight);
+            }
           }
         }
       });
