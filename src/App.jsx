@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
+import './App.css';
 import playerImgSrc from "./assets/images/player-def.png";
 import playerJumpImgSrc from "./assets/images/player-jump.png";
 import bg0 from "./assets/images/bg-image0.jpg";
@@ -407,37 +408,15 @@ export default function ClimbGame() {
   }, [running, imagesLoaded, atmosphereName]);
 
   return (
-    <div style={{ 
-      width: '100%', 
-      minHeight: '100vh', 
-      display: 'flex', 
-      flexDirection: 'column', 
-      alignItems: 'center', 
-      justifyContent: 'center', 
-      backgroundColor: '#0f172a', // bg-slate-900 직접 지정
-      color: 'white', 
-      padding: '20px',
-      boxSizing: 'border-box'
-    }}>
+    <div className="game-container">
       {/* 1. 제목 */}
-      <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '30px' }}>대기권 알아보기</h1>
+      <h1 className="game-title">대기권 알아보기</h1>
 
-      {/* 2. 가로 배치 컨테이너 (핵심) */}
-      <div style={{ 
-        display: 'flex', 
-        flexDirection: 'row', // 가로 정렬 강제
-        alignItems: 'flex-start', 
-        gap: '40px' 
-      }}>
+      {/* 2. 가로 배치 컨테이너 */}
+      <div className="game-layout">
         
         {/* [왼쪽] 게임 화면 (Canvas) */}
-        <div style={{ 
-          position: 'relative', 
-          borderRadius: '16px', 
-          overflow: 'hidden', 
-          border: '4px solid #334155',
-          backgroundColor: 'black'
-        }}>
+        <div className="canvas-wrapper">
           <canvas
             ref={canvasRef}
             width={GAME_WIDTH}
@@ -446,45 +425,29 @@ export default function ClimbGame() {
           />
         </div>
 
-        {/* [오른쪽] 정보창 (모든 정보 포함) */}
-        <div style={{ 
-          width: `${GAME_WIDTH}px`, 
-          height: `${GAME_HEIGHT}px`, 
-          display: 'flex', 
-          flexDirection: 'column', 
-          backgroundColor: '#1e293b', // bg-slate-800
-          padding: '30px', 
-          borderRadius: '24px', 
-          border: '1px solid #475569',
-          boxSizing: 'border-box'
-        }}>
+        {/* [오른쪽] 정보창 */}
+        <div 
+          className="info-panel" 
+          style={{ width: `${GAME_WIDTH}px`, height: `${GAME_HEIGHT}px` }} 
+        >
           {/* 현재 위치 */}
-          <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#facc15', marginBottom: '10px' }}>
+          <div className="current-location">
             현재 위치: {atmosphereName}
           </div>
 
           {/* 지표면 고도 */}
-          <div style={{ fontSize: '1.2rem', marginBottom: '20px' }}>
+          <div className="altitude-text">
             지표면에서 {score}km
           </div>
+          
           {/* 최고 고도 */}
-          <div style={{ fontSize: '0.9rem', color: '#94a3b8', marginBottom: '5px' }}>
+          <div className="highscore-text">
             최고 기록: {highScore} km
           </div>
 
           {/* 대기권 설명 */}
-          <div style={{ 
-            flex: 1, 
-            backgroundColor: 'rgba(15, 23, 42, 0.5)', 
-            padding: '20px', 
-            borderRadius: '12px', 
-            marginBottom: '20px', 
-            fontSize: '0.95rem',
-            lineHeight: '1.6',
-            border: '1px solid #334155',
-            overflowY: 'auto'
-          }}>
-            <div style={{ fontWeight: 'bold', color: '#60a5fa', marginBottom: '10px' }}>{atmosphereName} 정보</div>
+          <div className="desc-box">
+            <div className="desc-box-title">{atmosphereName} 정보</div>
             {atmosphereName === "대류권" && "기상 현상이 발생하는 층으로, 위로 갈수록 기온이 낮아집니다."}
             {atmosphereName === "성층권" && "안정한 층이며 오존층이 있어 자외선을 차단해줍니다."}
             {atmosphereName === "중간권" && "기온이 매우 낮으며 유성이 타기 시작하는 층입니다."}
@@ -493,40 +456,24 @@ export default function ClimbGame() {
           </div>
 
           {/* 게임 종료 안내 및 버튼 */}
-          <div style={{ marginBottom: '20px', textAlign: 'center' }}>
+          <div className="status-area">
             {!running ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#f87171' }}>흥 나락갔쥬?</div>
+              <div>
+                <div className="game-over-text">흥 나락갔쥬?</div>
                 <button 
+                  className="restart-btn"
                   onClick={initGame}
-                  style={{ 
-                    backgroundColor: 'red', 
-                    color: 'white', 
-                    padding: '15px', 
-                    borderRadius: '10px', 
-                    border: 'none', 
-                    fontWeight: 'bold', 
-                    fontSize: '1.1rem',
-                    cursor: 'pointer' 
-                  }}
                 >
                   다시 시작
                 </button>
               </div>
             ) : (
-              <div style={{ color: '#94a3b8', fontStyle: 'italic' }}>열심히 탐사 중...</div>
+              <div className="playing-text">열심히 탐사 중...</div>
             )}
           </div>
 
           {/* 조작 설명 */}
-          <div style={{ 
-            fontSize: '0.85rem', 
-            color: '#94a3b8', 
-            padding: '15px', 
-            backgroundColor: '#0f172a', 
-            borderRadius: '10px',
-            lineHeight: '1.8'
-          }}>
+          <div className="controls-guide">
             <div>• 이동 : 방향키</div>
             <div>• 점프 : Space</div>
             <div>• 더블점프 : 점프상태에서 Space</div>
