@@ -361,30 +361,35 @@ export default function ClimbGame() {
       ];
 
       bgList.forEach((layer) => {
-        // 현재 구간의 Y좌표 (화면 기준)
+        // 현재 구간의 Y좌표 (화면 기준, getPixelsFromKm 함수 사용)
         const startY = state.startY - getPixelsFromKm(layer.start) + state.cameraY;
         const endY = state.startY - getPixelsFromKm(layer.end) + state.cameraY;
         
         let tileStartY = startY; // 반복(타일) 이미지가 그려지기 시작할 기준점
 
-        // 1. [구간 시작점] 화면 크기(GAME_HEIGHT)만큼 딱 한 번 시작 이미지 그리기
-        if (layer.startImg && layer.startImg.complete) {
-          // 이미지가 그려질 맨 위쪽 Y좌표 계산
-          const startImgY = startY - GAME_HEIGHT; 
+        // 1. [구간 시작점] 시작 이미지를 '원래 비율'대로 딱 한 번 그리기
+        if (layer.startImg && layer.startImg.complete && layer.startImg.naturalWidth > 0) {
+          // [핵심 수정] 이미지 비율에 맞춘 렌더링 높이 계산
+          const startImgRenderHeight = layer.startImg.naturalHeight * (GAME_WIDTH / layer.startImg.naturalWidth);
+          
+          // 이미지가 그려질 맨 위쪽 Y좌표 계산 (늘리지 않고 계산된 높이 사용)
+          const startImgY = startY - startImgRenderHeight; 
           
           // 화면에 보일 때만 렌더링 (최적화)
-          if (startImgY < GAME_HEIGHT && startImgY + GAME_HEIGHT > 0) {
-            ctx.drawImage(layer.startImg, 0, startImgY, GAME_WIDTH, GAME_HEIGHT);
+          if (startImgY < GAME_HEIGHT && startImgY + startImgRenderHeight > 0) {
+            // [핵심 수정] GAME_HEIGHT 대신 계산된 startImgRenderHeight를 사용
+            ctx.drawImage(layer.startImg, 0, startImgY, GAME_WIDTH, startImgRenderHeight);
           }
           
-          // 시작 이미지가 화면 높이만큼 차지했으므로, 반복 이미지는 그 위에서부터 시작
-          tileStartY = startY - GAME_HEIGHT; 
+          // 시작 이미지가 차지한 높이만큼 타일 시작 위치를 위로 보정
+          tileStartY = startY - startImgRenderHeight; 
         }
 
-        // 2. [나머지 구간] 기존 이미지를 반복(타일링)해서 그리기
+        // 2. [나머지 구간] 타일 이미지 반복(타일링)해서 그리기
         if (layer.tileImg && layer.tileImg.complete) {
           const tileRenderHeight = layer.tileImg.height * (GAME_WIDTH / layer.tileImg.width);
 
+          // tileStartY부터 endY까지 위로 쌓아 올림
           for (let currentY = tileStartY - tileRenderHeight; currentY >= endY - tileRenderHeight; currentY -= tileRenderHeight) {
             if (currentY < GAME_HEIGHT && currentY + tileRenderHeight > 0) {
               ctx.drawImage(layer.tileImg, 0, currentY, GAME_WIDTH, tileRenderHeight);
