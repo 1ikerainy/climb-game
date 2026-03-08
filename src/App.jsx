@@ -28,12 +28,12 @@ const MOVE_SPEED = 4;
 // 80km 이후: 25픽셀 = 1km (4배 빠르게)
 function getKmFromPixels(pixels) {
   if (pixels <= 8000) return pixels / 100;
-  return 80 + (pixels - 8000) / 25; 
+  return 80 + (pixels - 8000) / 12.5; 
 }
 
 function getPixelsFromKm(km) {
   if (km <= 80) return km * 100;
-  return 8000 + (km - 80) * 25;
+  return 8000 + (km - 80) * 12.5;
 }
 
 function randomPlatform(y, prevX) {
