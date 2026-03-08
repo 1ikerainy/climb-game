@@ -89,7 +89,7 @@ export default function ClimbGame() {
     atmosphereName = "성층권";
   } else if (heightNum < 80) {
     atmosphereName = "중간권";
-  } else if (heightNum < 500) {
+  } else if (heightNum < 1000) {
     atmosphereName = "열권";
   } else {
     atmosphereName = "외기권 (우주)";
@@ -356,8 +356,8 @@ export default function ClimbGame() {
         { startImg: bgImages.current["대류권_시작"], tileImg: bgImages.current["대류권_반복"], start: 1.3, end: 10 },
         { startImg: bgImages.current["성층권_시작"], tileImg: bgImages.current["성층권_반복"], start: 10, end: 50 },
         { startImg: bgImages.current["중간권_시작"], tileImg: bgImages.current["중간권_반복"], start: 50, end: 80 },
-        { startImg: bgImages.current["열권_시작"], tileImg: bgImages.current["열권_반복"], start: 80, end: 500 },
-        { startImg: null, tileImg: bgImages.current["외기권_반복"], start: 500, end: 1000 },
+        { startImg: bgImages.current["열권_시작"], tileImg: bgImages.current["열권_반복"], start: 80, end: 1000 },
+        { startImg: null, tileImg: bgImages.current["외기권_반복"], start: 1000, end: 2000 },
       ];
 
       bgList.forEach((layer) => {
@@ -466,18 +466,18 @@ export default function ClimbGame() {
           {/* 대기권 설명 */}
           <div className="desc-box">
             <div className="desc-box-title">{atmosphereName} 정보</div>
-            {atmosphereName === "대류권" && "기상 현상이 발생하는 층으로, 위로 갈수록 기온이 낮아집니다."}
-            {atmosphereName === "성층권" && "안정한 층이며 오존층이 있어 자외선을 차단해줍니다."}
-            {atmosphereName === "중간권" && "기온이 매우 낮으며 유성이 타기 시작하는 층입니다."}
-            {atmosphereName === "열권" && "공기가 매우 희박하며 오로라가 관측되는 층입니다."}
-            {atmosphereName === "외기권 (우주)" && "지구 대기권의 가장 바깥쪽 경계 지역입니다."}
+            {atmosphereName === "대류권" && "(지표~11km)대기가 불안정하여 대류 현상이 일어나며, 공기와 수증기가 모여있어 기상 현상이 발생하는 층으로, 위로 갈수록 기온이 낮아집니다."}
+            {atmosphereName === "성층권" && "(11~50km)대기가 안정하여 비행기의 항로로 이용되며, 오존층이 있어 자외선을 흡수하여 위로 갈수록 기온이 높아지는 층입니다."}
+            {atmosphereName === "중간권" && "(50~80km)대기가 불안정하여 대류 현상이 일어나지만 수증기가 거의 없어 기상 현상이 일어나지 않으며, 유성이 타기 시작하는 층입니다. 위로 갈수록 기온이 낮아지며 중간권과 열권의 경계면 부근에서 최저기온이 나타납니다.."}
+            {atmosphereName === "열권" && "(80~1000km)대기가 안정하며, 공기가 매우 희박하며 낮과 밤의 기온차가 크고, 오로라가 나타나는 층입니다. 위로 갈수록 기온이 높아집니다."}
+            {atmosphereName === "외기권 (우주)" && "(1000km 이상)지구 대기권의 가장 바깥쪽 경계 지역입니다."}
           </div>
 
           {/* 게임 종료 안내 및 버튼 */}
           <div className="status-area">
             {!running ? (
               <div>
-                <div className="game-over-text">흥 나락갔쥬?</div>
+                <div className="game-over-text">흥! 나락갔쥬?</div>
                 <button 
                   className="restart-btn"
                   onClick={initGame}
